@@ -1,0 +1,21 @@
+{
+  // F5 runs the selected configuration; pick one from the Run and Debug dropdown
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "test_app (dev)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": ["--dart-define-from-file=env/dev.json"]
+    },
+    {
+      "name": "test_app (dev, profile)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "flutterMode": "profile",
+      "args": ["--dart-define-from-file=env/dev.json"]
+    }
+  ]
+}
