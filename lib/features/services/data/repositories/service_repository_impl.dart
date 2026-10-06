@@ -8,8 +8,11 @@ import '../../domain/repositories/service_repository.dart';
 import '../datasources/service_data_source.dart';
 
 class ServiceRepositoryImpl implements ServiceRepository {
-  const ServiceRepositoryImpl(this._dataSource);
+  ServiceRepositoryImpl(this._dataSource);
   final ServiceDataSource _dataSource;
+
+  // A detail bloc is created per page, so the cache lives here to make the second visit instant
+  final Map<String, ServiceDetail> _detailCache = {};
 
   @override
   Future<List<ServiceCategory>> getServiceCategories() => _guard(() async {
@@ -18,10 +21,16 @@ class ServiceRepositoryImpl implements ServiceRepository {
   });
 
   @override
-  Future<ServiceDetail> getServiceDetail(String id) => _guard(() async {
-    final model = await _dataSource.fetchServiceDetail(id);
-    return model.toEntity();
-  });
+  Future<ServiceDetail> getServiceDetail(String id) async {
+    final ServiceDetail? cached = _detailCache[id];
+    if (cached != null) return cached;
+
+    final ServiceDetail detail = await _guard(() async {
+      final model = await _dataSource.fetchServiceDetail(id);
+      return model.toEntity();
+    });
+    return _detailCache[id] = detail;
+  }
 
   // Translate data-layer exceptions into domain failures
   Future<T> _guard<T>(Future<T> Function() action) async {

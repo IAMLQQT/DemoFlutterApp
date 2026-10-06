@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:test_app/app.dart';
-import 'package:test_app/features/services/di.dart';
+import 'package:test_app/features/services/data/repositories/service_repository_impl.dart';
 import 'package:test_app/features/services/presentation/widgets/booking_button.dart';
 import 'package:test_app/features/services/presentation/widgets/service_card.dart';
 
@@ -19,10 +18,7 @@ void main() {
     addTearDown(() => FlutterError.onError = originalOnError);
 
     await tester.pumpWidget(
-      ProviderScope(
-        overrides: [serviceDataSourceProvider.overrideWithValue(FakeServiceDataSource())],
-        child: const App(),
-      ),
+      App(serviceRepository: ServiceRepositoryImpl(FakeServiceDataSource())),
     );
     await tester.pump();
     await tester.pump();
@@ -38,5 +34,7 @@ void main() {
     expect(find.textContaining('Noi dung a', findRichText: true, skipOffstage: false), findsOneWidget);
     // Booking button is shown because the API returned an active action
     expect(find.byType(BookingButton), findsOneWidget);
+    // Label must come from the API's button_title
+    expect(find.text('ĐẶT LỊCH NGAY'), findsOneWidget);
   });
 }

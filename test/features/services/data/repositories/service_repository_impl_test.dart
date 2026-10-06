@@ -60,4 +60,14 @@ void main() {
       throwsA(isA<UnexpectedFailure>()),
     );
   });
+
+  test('caches a loaded detail so the next visit skips the request', () async {
+    final dataSource = FakeServiceDataSource();
+    final repository = ServiceRepositoryImpl(dataSource);
+
+    await repository.getServiceDetail('a');
+    await repository.getServiceDetail('a');
+
+    expect(dataSource.detailCalls['a'], 1);
+  });
 }

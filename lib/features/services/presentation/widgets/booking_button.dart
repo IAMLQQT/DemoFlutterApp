@@ -31,10 +31,10 @@ class BookingButton extends StatelessWidget {
         child: InkWell(
           borderRadius: _radius,
           onTap: onPressed,
-          child: const SizedBox(
+          child: SizedBox(
             height: 60,
             width: double.infinity,
-            child: Center(child: Text('Đặt lịch', style: AppTextStyles.button)),
+            child: Center(child: Text(label, style: AppTextStyles.button)),
           ),
         ),
       ),

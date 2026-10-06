@@ -1,27 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/booking_action.dart';
 import '../../domain/entities/service_detail.dart';
 import '../../domain/entities/service_item.dart';
-import '../providers/service_providers.dart';
+import '../../domain/usecases/get_service_detail.dart';
+import '../bloc/service_detail/service_detail_bloc.dart';
+import '../bloc/service_list/service_list_bloc.dart';
 import '../widgets/booking_button.dart';
 import '../widgets/detail_header.dart';
 import '../widgets/service_html_content.dart';
 
-class ServiceDetailPage extends ConsumerStatefulWidget {
+class ServiceDetailPage extends StatelessWidget {
   const ServiceDetailPage({super.key, required this.serviceId});
 
   final String serviceId;
 
   @override
-  ConsumerState<ServiceDetailPage> createState() => _ServiceDetailPageState();
+  Widget build(BuildContext context) {
+    // One bloc per opened page; closed automatically when the page is popped
+    return BlocProvider(
+      create: (context) => ServiceDetailBloc(context.read<GetServiceDetail>())
+        ..add(ServiceDetailRequested(serviceId)),
+      child: _ServiceDetailView(serviceId: serviceId),
+    );
+  }
 }
 
-class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
+class _ServiceDetailView extends StatefulWidget {
+  const _ServiceDetailView({required this.serviceId});
+
+  final String serviceId;
+
+  @override
+  State<_ServiceDetailView> createState() => _ServiceDetailViewState();
+}
+
+class _ServiceDetailViewState extends State<_ServiceDetailView> {
   final ScrollController _scrollController = ScrollController();
   bool _showButton = true;
 
@@ -63,13 +81,12 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final ServiceItem? summary = ref.watch(
-      serviceSummaryProvider(widget.serviceId),
-    );
-    final AsyncValue<ServiceDetail> detailAsync = ref.watch(
-      serviceDetailProvider(widget.serviceId),
-    );
-    final ServiceDetail? detail = detailAsync.value;
+    final ServiceListState listState = context.watch<ServiceListBloc>().state;
+    final ServiceItem? summary =
+        listState is ServiceListLoaded ? listState.findService(widget.serviceId) : null;
+    final ServiceDetailState detailState = context.watch<ServiceDetailBloc>().state;
+    final ServiceDetail? detail =
+        detailState is ServiceDetailLoaded ? detailState.detail : null;
 
     // Header comes from the list right away; the article body loads separately
     final String? title = detail?.title ?? summary?.title;
@@ -82,8 +99,8 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
         backgroundColor: AppColors.surface,
         body: title == null || bannerUrl == null
             ? Center(
-                child: detailAsync.hasError
-                    ? Text('Đã có lỗi: ${detailAsync.error}')
+                child: detailState is ServiceDetailFailure
+                    ? Text('Đã có lỗi: ${detailState.message}')
                     : const CircularProgressIndicator(),
               )
             : Stack(
@@ -97,15 +114,15 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
                       SliverPadding(
                         padding: const EdgeInsets.fromLTRB(16, 20, 16, 120),
                         sliver: SliverToBoxAdapter(
-                          child: detailAsync.when(
-                            loading: () => const Padding(
-                              padding: EdgeInsets.only(top: 24),
-                              child: Center(child: CircularProgressIndicator()),
-                            ),
-                            error: (error, _) => Text('Đã có lỗi: $error'),
-                            data: (d) =>
-                                ServiceHtmlContent(html: d.contentHtml),
-                          ),
+                          child: switch (detailState) {
+                            ServiceDetailLoading() => const Padding(
+                                padding: EdgeInsets.only(top: 24),
+                                child: Center(child: CircularProgressIndicator()),
+                              ),
+                            ServiceDetailFailure(:final message) => Text('Đã có lỗi: $message'),
+                            ServiceDetailLoaded(:final detail) =>
+                              ServiceHtmlContent(html: detail.contentHtml),
+                          },
                         ),
                       ),
                     ],

@@ -1,10 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../config/app_config.dart';
 
-final dioProvider = Provider<Dio>((ref) {
+/// Shared HTTP client, created once in main.dart.
+Dio createDio() {
   final dio = Dio(
     BaseOptions(
       baseUrl: ApiConfig.baseUrl,
@@ -30,4 +30,4 @@ final dioProvider = Provider<Dio>((ref) {
   }
 
   return dio;
-});
+}

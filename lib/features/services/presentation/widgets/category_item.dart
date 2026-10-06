@@ -63,7 +63,7 @@ class CategoryItem extends StatelessWidget {
   }
 
   Widget _buildIcon() {
-    // Không có ảnh → hiện icon ngọn lửa thay thế
+    // No icon from the API -> show the flame as a fallback
     if (category.iconUrl.isEmpty) {
       return ColoredBox(
         color: AppColors.gold.withValues(alpha: 0.15),

@@ -22,4 +22,11 @@ void main() {
   test('throws FormatException when the body is not an object', () {
     expect(() => unwrapEnvelope('oops', (data) => data), throwsA(isA<FormatException>()));
   });
+
+  test('falls back to a default message when message is missing', () {
+    expect(
+      () => unwrapEnvelope({'status': 500, 'code': -1}, (data) => data),
+      throwsA(isA<ApiException>().having((e) => e.message, 'message', 'Unknown error')),
+    );
+  });
 }
