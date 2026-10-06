@@ -28,11 +28,6 @@ abstract final class AppTextStyles {
     color: AppColors.textPrimary,
   );
 
-  static const TextStyle sectionHeading = TextStyle(
-    fontSize: 17,
-    fontWeight: FontWeight.w700,
-    color: AppColors.textPrimary,
-  );
 
   static const TextStyle body = TextStyle(
     fontSize: 15,

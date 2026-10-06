@@ -54,10 +54,10 @@ void main() {
     expect(repoThrowing(error).getServiceCategories(), throwsA(isA<NetworkFailure>()));
   });
 
-  test('malformed data becomes UnexpectedFailure', () {
+  test('malformed data becomes InvalidDataFailure', () {
     expect(
       repoThrowing(const FormatException('bad')).getServiceCategories(),
-      throwsA(isA<UnexpectedFailure>()),
+      throwsA(isA<InvalidDataFailure>()),
     );
   });
 

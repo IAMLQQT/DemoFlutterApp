@@ -25,7 +25,10 @@ class ServiceRemoteDataSource implements ServiceDataSource {
 
   @override
   Future<ServiceDetailModel> fetchServiceDetail(String id) async {
-    final response = await _dio.get<Map<String, dynamic>>('/news/content/$id');
+    // Encode so ids containing "/" or "?" cannot change the path
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/news/content/${Uri.encodeComponent(id)}',
+    );
     return unwrapEnvelope(
       response.data,
       (data) => ServiceDetailModel.fromJson(data as Map<String, dynamic>),

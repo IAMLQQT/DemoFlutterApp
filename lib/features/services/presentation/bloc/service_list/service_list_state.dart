@@ -9,10 +9,18 @@ final class ServiceListLoading extends ServiceListState {
 }
 
 final class ServiceListLoaded extends ServiceListState {
-  const ServiceListLoaded({required this.categories, required this.activeCategoryId});
+  const ServiceListLoaded({
+    required this.categories,
+    required this.activeCategoryId,
+    this.refreshFailure,
+  });
 
   final List<ServiceCategory> categories;
   final String activeCategoryId;
+
+  /// Set when a refresh failed while data was already on screen: the list stays,
+  /// the page shows a SnackBar once.
+  final Failure? refreshFailure;
 
   List<ServiceItem> get services =>
       categories.where((c) => c.id == activeCategoryId).firstOrNull?.services ?? const [];
@@ -27,13 +35,16 @@ final class ServiceListLoaded extends ServiceListState {
     return null;
   }
 
-  ServiceListLoaded copyWith({String? activeCategoryId}) => ServiceListLoaded(
+  /// Any copy clears [refreshFailure] unless a new one is passed.
+  ServiceListLoaded copyWith({String? activeCategoryId, Failure? refreshFailure}) =>
+      ServiceListLoaded(
         categories: categories,
         activeCategoryId: activeCategoryId ?? this.activeCategoryId,
+        refreshFailure: refreshFailure,
       );
 }
 
 final class ServiceListFailure extends ServiceListState {
-  const ServiceListFailure(this.message);
-  final String message;
+  const ServiceListFailure(this.failure);
+  final Failure failure;
 }

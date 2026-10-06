@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/services/presentation/pages/service_detail_page.dart';
 import '../../features/services/presentation/pages/service_list_page.dart';
+import '../widgets/not_found_page.dart';
 
 abstract class AppRoutes {
   static const String services ='/services';
@@ -10,6 +11,7 @@ abstract class AppRoutes {
 
 final GoRouter appRouter = GoRouter (
   initialLocation: AppRoutes.services,
+  errorBuilder: (context, state) => const NotFoundPage(), // unknown path / bad deep link
   routes: [
     GoRoute(
       path: AppRoutes.services,

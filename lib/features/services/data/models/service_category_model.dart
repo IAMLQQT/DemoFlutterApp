@@ -6,7 +6,6 @@ class ServiceCategoryModel  {
     required this.id,
     required this.name,
     required this.image,
-    required this.sort,
     this.items = const [],
   });
 
@@ -16,7 +15,6 @@ class ServiceCategoryModel  {
       id: json['id'] as String ,
       name: (json['name'] as String? ?? '').trim(),
       image: json['image'] as String? ?? '',
-      sort: json['sort'] as int? ?? 0,
       items: [
         for (final group in groups) 
           for (final item in (group as Map<String, dynamic>)['items'] as List<dynamic>? ?? const [])
@@ -27,7 +25,6 @@ class ServiceCategoryModel  {
   final String id;
   final String name;
   final String image;
-  final int sort;
   final List<ServiceItemModel> items;
 
   bool get isHot => name.toUpperCase().contains('HOT');

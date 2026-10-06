@@ -14,6 +14,6 @@ final class ServiceDetailLoaded extends ServiceDetailState {
 }
 
 final class ServiceDetailFailure extends ServiceDetailState {
-  const ServiceDetailFailure(this.message);
-  final String message;
+  const ServiceDetailFailure(this.failure);
+  final Failure failure;
 }

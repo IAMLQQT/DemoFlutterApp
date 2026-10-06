@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/error_view.dart';
 import '../../domain/entities/booking_action.dart';
 import '../../domain/entities/service_detail.dart';
 import '../../domain/entities/service_item.dart';
@@ -23,8 +24,9 @@ class ServiceDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     // One bloc per opened page; closed automatically when the page is popped
     return BlocProvider(
-      create: (context) => ServiceDetailBloc(context.read<GetServiceDetail>())
-        ..add(ServiceDetailRequested(serviceId)),
+      create: (context) =>
+          ServiceDetailBloc(context.read<GetServiceDetail>())
+            ..add(ServiceDetailRequested(serviceId)),
       child: _ServiceDetailView(serviceId: serviceId),
     );
   }
@@ -79,30 +81,43 @@ class _ServiceDetailViewState extends State<_ServiceDetailView> {
     ).showSnackBar(SnackBar(content: Text('${action.label}: ${action.value}')));
   }
 
+  void _retry() => context.read<ServiceDetailBloc>().add(
+    ServiceDetailRequested(widget.serviceId),
+  );
+
   @override
   Widget build(BuildContext context) {
     final ServiceListState listState = context.watch<ServiceListBloc>().state;
-    final ServiceItem? summary =
-        listState is ServiceListLoaded ? listState.findService(widget.serviceId) : null;
-    final ServiceDetailState detailState = context.watch<ServiceDetailBloc>().state;
-    final ServiceDetail? detail =
-        detailState is ServiceDetailLoaded ? detailState.detail : null;
+    final ServiceItem? summary = listState is ServiceListLoaded
+        ? listState.findService(widget.serviceId)
+        : null;
+    final ServiceDetailState detailState = context
+        .watch<ServiceDetailBloc>()
+        .state;
+    final ServiceDetail? detail = detailState is ServiceDetailLoaded
+        ? detailState.detail
+        : null;
 
     // Header comes from the list right away; the article body loads separately
     final String? title = detail?.title ?? summary?.title;
     final String? bannerUrl = detail?.bannerUrl ?? summary?.bannerUrl;
-    final BookingAction? action = detail?.bookingActions.firstOrNull; // first action, if any
+    final BookingAction? action =
+        detail?.bookingActions.firstOrNull; // first action, if any
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
         backgroundColor: AppColors.surface,
+        // No header yet (deep link / list not loaded): give the user a way back
+        appBar: title == null || bannerUrl == null ? AppBar() : null,
         body: title == null || bannerUrl == null
-            ? Center(
-                child: detailState is ServiceDetailFailure
-                    ? Text('Đã có lỗi: ${detailState.message}')
-                    : const CircularProgressIndicator(),
-              )
+            ? switch (detailState) {
+                ServiceDetailFailure(:final failure) => ErrorView(
+                  failure: failure,
+                  onRetry: _retry,
+                ),
+                _ => const Center(child: CircularProgressIndicator()),
+              }
             : Stack(
                 children: [
                   CustomScrollView(
@@ -116,10 +131,14 @@ class _ServiceDetailViewState extends State<_ServiceDetailView> {
                         sliver: SliverToBoxAdapter(
                           child: switch (detailState) {
                             ServiceDetailLoading() => const Padding(
-                                padding: EdgeInsets.only(top: 24),
-                                child: Center(child: CircularProgressIndicator()),
-                              ),
-                            ServiceDetailFailure(:final message) => Text('Đã có lỗi: $message'),
+                              padding: EdgeInsets.only(top: 24),
+                              child: Center(child: CircularProgressIndicator()),
+                            ),
+                            ServiceDetailFailure(:final failure) => ErrorView(
+                              failure: failure,
+                              onRetry: _retry,
+                              compact: true,
+                            ),
                             ServiceDetailLoaded(:final detail) =>
                               ServiceHtmlContent(html: detail.contentHtml),
                           },

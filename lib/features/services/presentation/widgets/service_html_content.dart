@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/image_error_box.dart';
 
 /// Renders the article HTML returned by `/news/content/{id}`.
 class ServiceHtmlContent extends StatelessWidget {
@@ -24,12 +25,19 @@ class ServiceHtmlContent extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: CachedNetworkImage(imageUrl: src, fit: BoxFit.cover),
+            child: CachedNetworkImage(
+              imageUrl: src,
+              fit: BoxFit.cover,
+              errorWidget: (_, _, _) => const SizedBox(height: 160, child: ImageErrorBox()),
+            ),
           ),
         );
       },
       // TODO: open links with url_launcher; returning false keeps the default (no-op)
       onTapUrl: (url) => false,
+      // Malformed HTML must not break the page
+      onErrorBuilder: (context, element, error) =>
+          const Text('Không hiển thị được một phần nội dung.', style: AppTextStyles.body),
     );
   }
 }

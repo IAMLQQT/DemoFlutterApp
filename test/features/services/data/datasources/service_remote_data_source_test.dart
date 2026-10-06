@@ -62,4 +62,13 @@ void main() {
 
     expect(dataSource.fetchServiceDetail('missing'), throwsA(isA<ApiException>()));
   });
+
+  test('fetchServiceDetail encodes the id so it cannot change the path', () async {
+    final adapter = _StubAdapter(detailResponseJson('a/b?c'));
+    final dataSource = ServiceRemoteDataSource(buildDio(adapter));
+
+    await dataSource.fetchServiceDetail('a/b?c');
+
+    expect(adapter.lastRequest?.path, '/news/content/a%2Fb%3Fc');
+  });
 }

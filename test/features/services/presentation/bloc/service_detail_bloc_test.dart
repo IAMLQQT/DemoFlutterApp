@@ -7,6 +7,7 @@ import 'package:test_app/features/services/presentation/bloc/service_detail/serv
 
 import '../../../../helpers/fake_service_data_source.dart';
 
+
 void main() {
   blocTest<ServiceDetailBloc, ServiceDetailState>(
     'loads the article',
@@ -26,7 +27,30 @@ void main() {
     act: (bloc) => bloc.add(const ServiceDetailRequested('a')),
     expect: () => [
       isA<ServiceDetailLoading>(),
-      isA<ServiceDetailFailure>().having((s) => s.message, 'message', 'Không tìm thấy dữ liệu'),
+      isA<ServiceDetailFailure>().having((s) => s.failure, 'failure', isA<NotFoundFailure>()),
+    ],
+  );
+
+  blocTest<ServiceDetailBloc, ServiceDetailState>(
+    'retry after a failure loads the article',
+    build: () {
+      final dataSource = FakeServiceDataSource(error: const NetworkFailure());
+      final bloc = ServiceDetailBloc(GetServiceDetail(ServiceRepositoryImpl(dataSource)));
+      bloc.stream
+          .firstWhere((s) => s is ServiceDetailFailure)
+          .then((_) => dataSource.error = null);
+      return bloc;
+    },
+    act: (bloc) async {
+      bloc.add(const ServiceDetailRequested('a'));
+      await bloc.stream.firstWhere((s) => s is ServiceDetailFailure);
+      bloc.add(const ServiceDetailRequested('a'));
+    },
+    expect: () => [
+      isA<ServiceDetailLoading>(),
+      isA<ServiceDetailFailure>().having((s) => s.failure, 'failure', isA<NetworkFailure>()),
+      isA<ServiceDetailLoading>(),
+      isA<ServiceDetailLoaded>(),
     ],
   );
 }

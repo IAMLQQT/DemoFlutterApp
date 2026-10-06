@@ -9,7 +9,10 @@ class FakeServiceDataSource implements ServiceDataSource {
   FakeServiceDataSource({this.error});
 
   /// When set, every call throws this instead of returning data.
-  final Object? error;
+  Object? error;
+
+  /// When true, the categories call succeeds with an empty list.
+  bool returnEmpty = false;
 
   int categoriesCalls = 0;
   final Map<String, int> detailCalls = {};
@@ -18,6 +21,7 @@ class FakeServiceDataSource implements ServiceDataSource {
   Future<List<ServiceCategoryModel>> fetchServiceCategories() async {
     categoriesCalls++;
     if (error != null) throw error!;
+    if (returnEmpty) return [];
     return (screenResponseJson()['data'] as List<dynamic>)
         .map((e) => ServiceCategoryModel.fromJson(e as Map<String, dynamic>))
         .toList();

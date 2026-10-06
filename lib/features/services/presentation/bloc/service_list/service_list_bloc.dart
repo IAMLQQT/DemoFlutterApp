@@ -1,5 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../../core/error/error_mapper.dart';
+import '../../../../../core/error/failure.dart';
 import '../../../domain/entities/service_category.dart';
 import '../../../domain/entities/service_item.dart';
 import '../../../domain/usecases/get_service_categories.dart';
@@ -24,7 +26,7 @@ class ServiceListBloc extends Bloc<ServiceListEvent, ServiceListState> {
     try {
       final categories = await _getServiceCategories();
       if (categories.isEmpty) {
-        emit(const ServiceListFailure('Chưa có danh mục nào'));
+        emit(const ServiceListFailure(NotFoundFailure('Chưa có danh mục dịch vụ nào.')));
         return;
       }
       // Keep the user's tab after a refresh if it still exists
@@ -36,8 +38,16 @@ class ServiceListBloc extends Bloc<ServiceListEvent, ServiceListState> {
         categories: categories,
         activeCategoryId: keptId ?? categories.first.id,
       ));
-    } catch (e) {
-      emit(ServiceListFailure(e.toString()));
+    } catch (error, stackTrace) {
+      final Failure failure = mapToFailure(error, stackTrace);
+      if (failure is CancelledFailure) {
+        // Nothing to report; restore whatever was on screen
+        if (previous is! ServiceListLoaded) emit(ServiceListFailure(failure));
+        return;
+      }
+      emit(previous is ServiceListLoaded
+          ? previous.copyWith(refreshFailure: failure) // keep the list visible
+          : ServiceListFailure(failure));
     }
   }
 

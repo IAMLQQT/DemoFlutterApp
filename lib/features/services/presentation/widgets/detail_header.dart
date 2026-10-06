@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/image_error_box.dart';
 
 
 class DetailHeader extends StatelessWidget {
@@ -33,7 +34,12 @@ class DetailHeader extends StatelessWidget {
             left: 0,
             right: 0,
             height: bannerHeight,
-            child: CachedNetworkImage(imageUrl: bannerUrl, fit: BoxFit.cover),
+            child: CachedNetworkImage(
+              imageUrl: bannerUrl,
+              fit: BoxFit.cover,
+              placeholder: (_, _) => const ImageErrorBox(loading: true),
+              errorWidget: (_, _, _) => const ImageErrorBox(),
+            ),
           ),
 
           // [2] Title card — NOT positioned, so it decides the Stack's height

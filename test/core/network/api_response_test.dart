@@ -23,10 +23,10 @@ void main() {
     expect(() => unwrapEnvelope('oops', (data) => data), throwsA(isA<FormatException>()));
   });
 
-  test('falls back to a default message when message is missing', () {
+  test('leaves message null when the envelope has none', () {
     expect(
       () => unwrapEnvelope({'status': 500, 'code': -1}, (data) => data),
-      throwsA(isA<ApiException>().having((e) => e.message, 'message', 'Unknown error')),
+      throwsA(isA<ApiException>().having((e) => e.message, 'message', isNull)),
     );
   });
 }
